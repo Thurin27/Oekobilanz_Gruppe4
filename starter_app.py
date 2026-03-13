@@ -1,243 +1,325 @@
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "marimo",
+#     "plotly",
+#     "matplotlib",
+# ]
+# ///
+
 import marimo
 
-__generated_with = "0.19.1"
-app = marimo.App(width="medium")
+__generated_with = "0.19.11"
+app = marimo.App()
+
+
+@app.cell
+def _(mo):
+    mo.md("## Vergleich: Gasheizung vs. PV / Solarthermie / Windkraft")
+
+    energy_kwh = mo.ui.number(
+        label="Energiebedarf / Energiemenge [kWh]",
+        value=10000,
+        step=100,
+        start=0,
+    )
+
+    mo.md("### CO₂-Faktoren (g CO₂-eq/kWh) – anpassbar")
+
+    c_gas = mo.ui.number(
+        label="Gasheizung [g/kWh_th]",
+        value=250,
+        step=10,
+        start=0,
+    )
+    c_pv = mo.ui.number(
+        label="Photovoltaik (PV) [g/kWh_el]",
+        value=50,
+        step=5,
+        start=0,
+    )
+    c_solarth = mo.ui.number(
+        label="Solarthermie [g/kWh_th]",
+        value=30,
+        step=5,
+        start=0,
+    )
+    c_wind = mo.ui.number(
+        label="Windkraft [g/kWh_el]",
+        value=15,
+        step=5,
+        start=0,
+    )
+
+    mo.md("### Kosten (€/kWh) – optionaler Kostenvergleich")
+
+    price_gas = mo.ui.number(
+        label="Gaspreis [€/kWh_th]",
+        value=0.12,
+        step=0.01,
+        start=0,
+    )
+    price_pv = mo.ui.number(
+        label="PV-Strom [€/kWh_el]",
+        value=0.08,
+        step=0.01,
+        start=0,
+    )
+    price_solarth = mo.ui.number(
+        label="Solarthermie-Wärme [€/kWh_th]",
+        value=0.06,
+        step=0.01,
+        start=0,
+    )
+    price_wind = mo.ui.number(
+        label="Windstrom [€/kWh_el]",
+        value=0.07,
+        step=0.01,
+        start=0,
+    )
+
+    _layout = mo.vstack([
+        mo.md("## Vergleich: Gasheizung vs. PV / Solarthermie / Windkraft"),
+        energy_kwh,
+        mo.md("### CO₂-Faktoren (g CO₂-eq/kWh) – anpassbar"),
+        mo.hstack([c_gas, c_pv, c_solarth, c_wind], gap=1),
+        mo.md("### Kosten (€/kWh) – optionaler Kostenvergleich"),
+        mo.hstack([price_gas, price_pv, price_solarth, price_wind], gap=1),
+    ])
+    return (
+        c_gas,
+        c_pv,
+        c_solarth,
+        c_wind,
+        energy_kwh,
+        price_gas,
+        price_pv,
+        price_solarth,
+        price_wind,
+    )
+
+
+@app.cell
+def _(
+    c_gas,
+    c_pv,
+    c_solarth,
+    c_wind,
+    energy_kwh,
+    price_gas,
+    price_pv,
+    price_solarth,
+    price_wind,
+):
+    # --- Hilfsfunktionen ---
+    def total_co2_kg(g_per_kwh: float, energy: float) -> float:
+        return (g_per_kwh * energy) / 1000
+
+    def total_cost_eur(eur_per_kwh: float, energy: float) -> float:
+        return eur_per_kwh * energy
+
+    def fmt_de_int(x: float) -> str:
+        return f"{x:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    def fmt_de_money(x: float) -> str:
+        return f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    def fmt_de_t(x: float) -> str:
+        return fmt_de_money(x / 1000)
+
+    # --- Berechnungen ---
+    E = float(energy_kwh.value or 0)
+
+    gas_kg = total_co2_kg(float(c_gas.value), E)
+    pv_kg = total_co2_kg(float(c_pv.value), E)
+    solarth_kg = total_co2_kg(float(c_solarth.value), E)
+    wind_kg = total_co2_kg(float(c_wind.value), E)
+
+    pv_save_kg = gas_kg - pv_kg
+    solarth_save_kg = gas_kg - solarth_kg
+    wind_save_kg = gas_kg - wind_kg
+
+    gas_cost = total_cost_eur(float(price_gas.value), E)
+    pv_cost = total_cost_eur(float(price_pv.value), E)
+    solarth_cost = total_cost_eur(float(price_solarth.value), E)
+    wind_cost = total_cost_eur(float(price_wind.value), E)
+
+    pv_save_eur = gas_cost - pv_cost
+    solarth_save_eur = gas_cost - solarth_cost
+    wind_save_eur = gas_cost - wind_cost
+    return (
+        E,
+        fmt_de_int,
+        fmt_de_money,
+        fmt_de_t,
+        gas_cost,
+        gas_kg,
+        pv_cost,
+        pv_kg,
+        pv_save_eur,
+        pv_save_kg,
+        solarth_cost,
+        solarth_kg,
+        solarth_save_eur,
+        solarth_save_kg,
+        wind_cost,
+        wind_kg,
+        wind_save_eur,
+        wind_save_kg,
+    )
+
+
+@app.cell
+def _(
+    c_gas,
+    c_pv,
+    c_solarth,
+    c_wind,
+    fmt_de_int,
+    fmt_de_money,
+    fmt_de_t,
+    gas_cost,
+    gas_kg,
+    mo,
+    pv_cost,
+    pv_kg,
+    pv_save_eur,
+    pv_save_kg,
+    solarth_cost,
+    solarth_kg,
+    solarth_save_eur,
+    solarth_save_kg,
+    wind_cost,
+    wind_kg,
+    wind_save_eur,
+    wind_save_kg,
+):
+    rows = [
+        ["Gasheizung (Referenz)", f"{float(c_gas.value):.0f}", fmt_de_int(gas_kg), "—", "—", fmt_de_money(gas_cost), "—"],
+        ["Photovoltaik (PV)", f"{float(c_pv.value):.0f}", fmt_de_int(pv_kg), fmt_de_int(pv_save_kg), fmt_de_t(pv_save_kg), fmt_de_money(pv_cost), fmt_de_money(pv_save_eur)],
+        ["Solarthermie", f"{float(c_solarth.value):.0f}", fmt_de_int(solarth_kg), fmt_de_int(solarth_save_kg), fmt_de_t(solarth_save_kg), fmt_de_money(solarth_cost), fmt_de_money(solarth_save_eur)],
+        ["Windkraft", f"{float(c_wind.value):.0f}", fmt_de_int(wind_kg), fmt_de_int(wind_save_kg), fmt_de_t(wind_save_kg), fmt_de_money(wind_cost), fmt_de_money(wind_save_eur)],
+    ]
+
+    _table = mo.md(
+        f"""
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <thead>
+            <tr style="text-align:left; border-bottom:1px solid #ddd;">
+              <th style="padding:8px;">Technologie</th>
+              <th style="padding:8px;">CO₂-Faktor [g/kWh]</th>
+              <th style="padding:8px;">Gesamt-CO₂ [kg]</th>
+              <th style="padding:8px;">Einsparung ggü. Gas [kg]</th>
+              <th style="padding:8px;">Einsparung ggü. Gas [t]</th>
+              <th style="padding:8px;">Kosten gesamt [€]</th>
+              <th style="padding:8px;">Kosten-Vorteil ggü. Gas [€]</th>
+            </tr>
+          </thead>
+          <tbody>
+            {''.join([
+              "<tr style='border-bottom:1px solid #eee;'>"
+              f"<td style='padding:8px;'><b>{r[0]}</b></td>"
+              f"<td style='padding:8px;'>{r[1]}</td>"
+              f"<td style='padding:8px;'>{r[2]}</td>"
+              f"<td style='padding:8px;'>{r[3]}</td>"
+              f"<td style='padding:8px;'>{r[4]}</td>"
+              f"<td style='padding:8px;'>{r[5]}</td>"
+              f"<td style='padding:8px;'>{r[6]}</td>"
+              "</tr>"
+              for r in rows
+            ])}
+          </tbody>
+        </table>
+        """
+    )
+
+    _ergebnis = mo.vstack([
+        mo.md("## Ergebnisse"),
+        _table,
+    ])
+    return
+
+
+@app.cell
+def _(
+    E,
+    fmt_de_int,
+    gas_cost,
+    gas_kg,
+    mo,
+    plt,
+    pv_cost,
+    pv_kg,
+    pv_save_eur,
+    pv_save_kg,
+    solarth_cost,
+    solarth_kg,
+    solarth_save_eur,
+    solarth_save_kg,
+    wind_cost,
+    wind_kg,
+    wind_save_eur,
+    wind_save_kg,
+):
+    labels = ["Gas", "PV", "Solarthermie", "Wind"]
+    co2_values = [gas_kg, pv_kg, solarth_kg, wind_kg]
+    co2_savings = [0, pv_save_kg, solarth_save_kg, wind_save_kg]
+    cost_values = [gas_cost, pv_cost, solarth_cost, wind_cost]
+    cost_savings = [0, pv_save_eur, solarth_save_eur, wind_save_eur]
+
+    fig1, ax1 = plt.subplots()
+    ax1.bar(labels, co2_values)
+    ax1.set_ylabel("Gesamt-CO₂ [kg]")
+    ax1.set_title("Gesamt-CO₂ für E = " + fmt_de_int(E) + " kWh")
+
+    fig2, ax2 = plt.subplots()
+    ax2.bar(labels, co2_savings)
+    ax2.axhline(0, color="black", linewidth=0.5)
+    ax2.set_ylabel("Einsparung ggü. Gas [kg]")
+    ax2.set_title("CO₂-Einsparung gegenüber Gas")
+
+    fig3, ax3 = plt.subplots()
+    ax3.bar(labels, cost_values)
+    ax3.set_ylabel("Kosten gesamt [€]")
+    ax3.set_title("Kosten für E = " + fmt_de_int(E) + " kWh")
+
+    fig4, ax4 = plt.subplots()
+    ax4.bar(labels, cost_savings)
+    ax4.axhline(0, color="black", linewidth=0.5)
+    ax4.set_ylabel("Kosten-Vorteil ggü. Gas [€]")
+    ax4.set_title("Kosten-Vorteil gegenüber Gas")
+
+    _diagramme = mo.vstack([
+        mo.md("## Diagramme"),
+        mo.hstack([fig1, fig2], gap=1),
+        mo.hstack([fig3, fig4], gap=1),
+    ])
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md("""
+    ## Formeln (Schul-/Klausurschreibweise)
+
+    - Gesamt-CO₂ [kg] = (CO₂-Faktor [g/kWh] · E [kWh]) / 1000
+    - Einsparung CO₂ [kg] = Gesamt-CO₂(Gas) − Gesamt-CO₂(Technologie)
+
+    - Kosten [€] = Preis [€/kWh] · E [kWh]
+    - Kosten-Vorteil [€] = Kosten(Gas) − Kosten(Technologie)
+
+    Hinweis: PV/Wind liefern Strom, Solarthermie/Gas liefern Wärme.
+    Für einen Schul-Prototyp ist der Vergleich über gleiche Energiemenge E in Ordnung.
+    """)
+    return
 
 
 @app.cell
 def _():
     import marimo as mo
-    import pandas as pd
-    import altair as alt
-    # Weitere Imports hier ergänzen (z.B. plotly)
-    return alt, mo, pd
+    import matplotlib.pyplot as plt
 
-
-@app.cell
-def _(mo):
-    mo.md(r"""
-    # 🌱 Ökobilanz-App für Erneuerbare Energien
-
-    **Entwickelt von: [EUER GRUPPENNAME]**
-
-    Kurze Beschreibung eurer App hier einfügen...
-
-    ---
-    """)
-    return
-
-
-@app.cell
-def _():
-    # =================================================================
-    # DATEN
-    # =================================================================
-    # Hier eure Daten einfügen
-    # 
-    # Tipp: Recherchiert auf https://www.probas.umweltbundesamt.de
-    # 
-    # Beispielstruktur:
-    # energietraeger_daten = pd.DataFrame({
-    #     "Energieträger": ["Photovoltaik", "Windkraft", ...],
-    #     "CO2_eq_g_kWh": [40, 10, ...],
-    #     ...
-    # })
-
-    # TODO: Eure Daten hier einfügen
-    #energietraeger_daten = pd.DataFrame({
-    #    "Energieträger": ["Beispiel 1", "Beispiel 2"],
-    #    "CO2_eq_g_kWh": [0, 0],
-        # Weitere Spalten ergänzen...
-    #})
-    return
-
-
-@app.cell
-def _(pd):
-    # Beispieldaten angelehnt an ProBas/GEMIS-Werte
-    # Quelle: Typische Werte aus Lebenszyklusanalysen
-
-    energietraeger_daten = pd.DataFrame({
-        "Energieträger": [
-            "Photovoltaik (Dach)", 
-            "Photovoltaik (Freifläche)",
-            "Windkraft (Onshore)", 
-            "Windkraft (Offshore)",
-            "Wasserkraft (Laufwasser)",
-            "Biomasse (Holz-HKW)",
-            "Biogas (landw.)",
-            "Solarthermie",
-            "Geothermie"
-        ],
-        "CO2_eq_g_kWh": [40, 35, 10, 12, 4, 30, 170, 25, 38],  # g CO2-eq/kWh
-        "KEA_MJ_kWh": [0.45, 0.40, 0.08, 0.10, 0.02, 0.15, 0.85, 0.30, 0.42],  # MJ/kWh kumulierter Energieaufwand
-        "Flaechenbedarf_m2_kW": [7, 20, 30, 15, 0.5, 500, 300, 3, 2],  # m²/kW installierte Leistung
-        "Lebensdauer_Jahre": [25, 25, 20, 25, 80, 20, 15, 20, 30],
-        "Erntefaktor": [10, 12, 50, 45, 200, 8, 3, 15, 12],  # Energy Return on Investment
-        "Kategorie": [
-            "Solar", "Solar", "Wind", "Wind", "Wasser", 
-            "Biomasse", "Biomasse", "Solar", "Geothermie"
-        ]
-    })
-    energietraeger_daten
-    return (energietraeger_daten,)
-
-
-@app.cell
-def _(alt, energietraeger_daten):
-    # Diagramm erstellen, Code mit dataframe gui erstellt
-    _chart = (
-        alt.Chart(energietraeger_daten)
-        .mark_point()
-        .encode(
-            x=alt.X(field='Energieträger', type='nominal'),
-            y=alt.Y(field='CO2_eq_g_kWh', type='quantitative', aggregate='mean'),
-            tooltip=[
-                alt.Tooltip(field='Energieträger'),
-                alt.Tooltip(field='CO2_eq_g_kWh', aggregate='mean', format=',.0f')
-            ]
-        )
-        .properties(
-            height=290,
-            width='container',
-            config={
-                'axis': {
-                    'grid': True
-                }
-            }
-        )
-    )
-    _chart
-    return
-
-
-@app.cell
-def _(energietraeger_daten, mo):
-    # =================================================================
-    # BENUTZEROBERFLÄCHE (UI)
-    # =================================================================
-    # Hier interaktive Elemente erstellen
-    #
-    # Beispiele:
-    # - Dropdown: mo.ui.dropdown(options=[...], label="...")
-    # - Slider:   mo.ui.slider(start=0, stop=100, value=50, label="...")
-    # - Checkbox: mo.ui.checkbox(label="...")
-    #
-    # Dokumentation: https://docs.marimo.io/api/inputs/
-
-    # TODO: Eure UI-Elemente hier erstellen
-
-    # Beispiel Dropdown:
-    energie_auswahl = mo.ui.dropdown(
-        options=energietraeger_daten["Energieträger"].tolist(),
-        value=energietraeger_daten["Energieträger"].iloc[0],
-        label="Energieträger auswählen"
-    )
-
-    # Beispiel Slider:
-    leistung_slider = mo.ui.slider(start=1, stop=1000, value=100, label="Leistung (kW)")
-    return energie_auswahl, leistung_slider
-
-
-@app.cell
-def _(energie_auswahl, leistung_slider, mo):
-    mo.md(f"""
-    ## ⚙️ Parameter einstellen
-
-    {mo.hstack([energie_auswahl, leistung_slider], justify="start", gap=2)}
-
-    """)
-    return
-
-
-@app.cell
-def _(energie_auswahl, energietraeger_daten, leistung_slider):
-    # =================================================================
-    # BERECHNUNGEN
-    # =================================================================
-    # Hier die Berechnungen basierend auf der Auswahl durchführen
-    #
-    # Beispiel:
-    # ausgewaehlter_traeger = energie_auswahl.value
-    # daten = energietraeger_daten[energietraeger_daten["Energieträger"] == ausgewaehlter_traeger]
-    # co2_wert = daten["CO2_eq_g_kWh"].iloc[0]
-
-    # TODO: Eure Berechnungen hier
-
-    ausgewaehlter_traeger = energie_auswahl.value
-    leistung_kw=leistung_slider.value
-    jahresertrag_kwh = leistung_kw * 1100 #1000 nur als Beispiel
-
-    # Beispiel: Daten für ausgewählten Träger holen
-    daten = energietraeger_daten[
-        energietraeger_daten["Energieträger"] == ausgewaehlter_traeger
-    ].iloc[0]
-    return ausgewaehlter_traeger, jahresertrag_kwh, leistung_kw
-
-
-@app.cell
-def _(ausgewaehlter_traeger, jahresertrag_kwh, leistung_kw, mo):
-    mo.md(f"""
-    ## 📊 Ergebnisse für {ausgewaehlter_traeger}
-
-    ### Energieertrag
-    | Kennzahl | Wert |
-    |----------|------|
-    | Installierte Leistung | **{leistung_kw:,.0f} kW** |
-    | Jahresertrag | **{jahresertrag_kwh:,.0f} kWh/a** |
-
-    """)
-    return
-
-
-@app.cell
-def _(mo):
-    # =================================================================
-    # VISUALISIERUNG
-    # =================================================================
-    # Hier Diagramme erstellen
-    #
-    # Möglichkeiten:
-    # - plotly: Interaktive Diagramme (empfohlen)
-    #   import plotly.express as px
-    #   fig = px.bar(df, x="...", y="...")
-    #   mo.ui.plotly(fig)
-    #
-    # - matplotlib: Statische Diagramme
-    #   import matplotlib.pyplot as plt
-    #   plt.bar(...)
-    #   plt.gcf()
-    #
-    # Dokumentation: https://docs.marimo.io/api/plotting/
-
-    # TODO: Eure Visualisierungen hier
-
-    mo.md("""
-    ## 📈 Visualisierung
-
-    *Hier kommen eure Diagramme hin...*
-    """)
-    return
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""
-    ---
-
-    ## ℹ️ Hinweise
-
-    **Datenquellen:**
-    - [Hier eure Quellen angeben]
-
-    **Methodik:**
-    - [Hier eure Methodik beschreiben]
-
-    ---
-
-    *Entwickelt für die Fachschule für Umweltschutztechnik*
-    """)
-    return
+    return mo, plt
 
 
 if __name__ == "__main__":

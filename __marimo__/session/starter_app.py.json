@@ -1,0 +1,94 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.20.4",
+    "script_metadata_hash": "68dfcfc3a2b31586d5ec2ef444dfa58b"
+  },
+  "cells": [
+    {
+      "id": "lEQa",
+      "code_hash": "cd4c5a93737c9bfba5fe0e84ff2c2917",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"formeln-schul-klausurschreibweise\">Formeln (Schul-/Klausurschreibweise)</h2>\n<ul>\n<li>Gesamt-CO\u2082 [kg] = (CO\u2082-Faktor [g/kWh] \u00b7 E [kWh]) / 1000</li>\n<li>Einsparung CO\u2082 [kg] = Gesamt-CO\u2082(Gas) \u2212 Gesamt-CO\u2082(Technologie)</li>\n<li>Kosten [\u20ac] = Preis [\u20ac/kWh] \u00b7 E [kWh]</li>\n<li>Kosten-Vorteil [\u20ac] = Kosten(Gas) \u2212 Kosten(Technologie)</li>\n</ul>\n<span class=\"paragraph\">Hinweis: PV/Wind liefern Strom, Solarthermie/Gas liefern W\u00e4rme.\nF\u00fcr einen Schul-Prototyp ist der Vergleich \u00fcber gleiche Energiemenge E in Ordnung.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "f74239bc0f4e04b5319382ef56973325",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6a67eaac53983af4bfb9aa4414f80a18",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "b030555209bbae01538ea459c7b03124",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "9772fedef8de99c96f14d32e870deafe",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "7802eb41d8b52c22105f8bbe08d60476",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "Matplotlib is building the font cache; this may take a moment.\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    }
+  ]
+}
