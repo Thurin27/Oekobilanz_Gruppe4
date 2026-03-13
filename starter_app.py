@@ -2,29 +2,24 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "marimo",
-#     "plotly",
 #     "matplotlib",
 # ]
 # ///
 
 import marimo
 
-__generated_with = "0.19.11"
+__generated_with = "0.20.4"
 app = marimo.App()
 
 
 @app.cell
 def _(mo):
-    mo.md("## Vergleich: Gasheizung vs. PV / Solarthermie / Windkraft")
-
     energy_kwh = mo.ui.number(
         label="Energiebedarf / Energiemenge [kWh]",
         value=10000,
         step=100,
         start=0,
     )
-
-    mo.md("### CO₂-Faktoren (g CO₂-eq/kWh) – anpassbar")
 
     c_gas = mo.ui.number(
         label="Gasheizung [g/kWh_th]",
@@ -51,8 +46,6 @@ def _(mo):
         start=0,
     )
 
-    mo.md("### Kosten (€/kWh) – optionaler Kostenvergleich")
-
     price_gas = mo.ui.number(
         label="Gaspreis [€/kWh_th]",
         value=0.12,
@@ -78,7 +71,7 @@ def _(mo):
         start=0,
     )
 
-    _layout = mo.vstack([
+    mo.vstack([
         mo.md("## Vergleich: Gasheizung vs. PV / Solarthermie / Windkraft"),
         energy_kwh,
         mo.md("### CO₂-Faktoren (g CO₂-eq/kWh) – anpassbar"),
@@ -201,41 +194,39 @@ def _(
         ["Windkraft", f"{float(c_wind.value):.0f}", fmt_de_int(wind_kg), fmt_de_int(wind_save_kg), fmt_de_t(wind_save_kg), fmt_de_money(wind_cost), fmt_de_money(wind_save_eur)],
     ]
 
-    _table = mo.md(
-        f"""
-        <table style="width:100%; border-collapse:collapse; font-size:14px;">
-          <thead>
-            <tr style="text-align:left; border-bottom:1px solid #ddd;">
-              <th style="padding:8px;">Technologie</th>
-              <th style="padding:8px;">CO₂-Faktor [g/kWh]</th>
-              <th style="padding:8px;">Gesamt-CO₂ [kg]</th>
-              <th style="padding:8px;">Einsparung ggü. Gas [kg]</th>
-              <th style="padding:8px;">Einsparung ggü. Gas [t]</th>
-              <th style="padding:8px;">Kosten gesamt [€]</th>
-              <th style="padding:8px;">Kosten-Vorteil ggü. Gas [€]</th>
-            </tr>
-          </thead>
-          <tbody>
-            {''.join([
-              "<tr style='border-bottom:1px solid #eee;'>"
-              f"<td style='padding:8px;'><b>{r[0]}</b></td>"
-              f"<td style='padding:8px;'>{r[1]}</td>"
-              f"<td style='padding:8px;'>{r[2]}</td>"
-              f"<td style='padding:8px;'>{r[3]}</td>"
-              f"<td style='padding:8px;'>{r[4]}</td>"
-              f"<td style='padding:8px;'>{r[5]}</td>"
-              f"<td style='padding:8px;'>{r[6]}</td>"
-              "</tr>"
-              for r in rows
-            ])}
-          </tbody>
-        </table>
-        """
-    )
-
-    _ergebnis = mo.vstack([
+    mo.vstack([
         mo.md("## Ergebnisse"),
-        _table,
+        mo.md(
+            f"""
+    <table style="width:100%; border-collapse:collapse; font-size:14px;">
+      <thead>
+    <tr style="text-align:left; border-bottom:1px solid #ddd;">
+      <th style="padding:8px;">Technologie</th>
+      <th style="padding:8px;">CO₂-Faktor [g/kWh]</th>
+      <th style="padding:8px;">Gesamt-CO₂ [kg]</th>
+      <th style="padding:8px;">Einsparung ggü. Gas [kg]</th>
+      <th style="padding:8px;">Einsparung ggü. Gas [t]</th>
+      <th style="padding:8px;">Kosten gesamt [€]</th>
+      <th style="padding:8px;">Kosten-Vorteil ggü. Gas [€]</th>
+    </tr>
+      </thead>
+      <tbody>
+    {''.join([
+      "<tr style='border-bottom:1px solid #eee;'>"
+      f"<td style='padding:8px;'><b>{r[0]}</b></td>"
+      f"<td style='padding:8px;'>{r[1]}</td>"
+      f"<td style='padding:8px;'>{r[2]}</td>"
+      f"<td style='padding:8px;'>{r[3]}</td>"
+      f"<td style='padding:8px;'>{r[4]}</td>"
+      f"<td style='padding:8px;'>{r[5]}</td>"
+      f"<td style='padding:8px;'>{r[6]}</td>"
+      "</tr>"
+      for r in rows
+    ])}
+      </tbody>
+    </table>
+    """
+        ),
     ])
     return
 
@@ -271,28 +262,32 @@ def _(
     ax1.bar(labels, co2_values)
     ax1.set_ylabel("Gesamt-CO₂ [kg]")
     ax1.set_title("Gesamt-CO₂ für E = " + fmt_de_int(E) + " kWh")
+    plt.close(fig1)
 
     fig2, ax2 = plt.subplots()
     ax2.bar(labels, co2_savings)
     ax2.axhline(0, color="black", linewidth=0.5)
     ax2.set_ylabel("Einsparung ggü. Gas [kg]")
     ax2.set_title("CO₂-Einsparung gegenüber Gas")
+    plt.close(fig2)
 
     fig3, ax3 = plt.subplots()
     ax3.bar(labels, cost_values)
     ax3.set_ylabel("Kosten gesamt [€]")
     ax3.set_title("Kosten für E = " + fmt_de_int(E) + " kWh")
+    plt.close(fig3)
 
     fig4, ax4 = plt.subplots()
     ax4.bar(labels, cost_savings)
     ax4.axhline(0, color="black", linewidth=0.5)
     ax4.set_ylabel("Kosten-Vorteil ggü. Gas [€]")
     ax4.set_title("Kosten-Vorteil gegenüber Gas")
+    plt.close(fig4)
 
-    _diagramme = mo.vstack([
+    mo.vstack([
         mo.md("## Diagramme"),
-        mo.hstack([fig1, fig2], gap=1),
-        mo.hstack([fig3, fig4], gap=1),
+        mo.hstack([mo.as_html(fig1), mo.as_html(fig2)], gap=1),
+        mo.hstack([mo.as_html(fig3), mo.as_html(fig4)], gap=1),
     ])
     return
 
